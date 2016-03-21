@@ -19,6 +19,11 @@ function checkyaml() {
     ruby -e "require 'yaml'; YAML.load_file('$1')"
 }
 
+function checkjson() {
+    python -m json.tool $1 >/dev/null
+}
+
+
 # Make sure the necessary tools are installed. If they aren't, just die and
 # stop the commit. Force the use of these tools before a commit is allowed.
 # No commit should ever happen without a puppet-lint check.
@@ -139,6 +144,23 @@ do
             syntax_is_bad=1
         else
             echo "OK: $file looks like a valid YAML file"
+        fi
+    fi
+done
+echo ""
+
+echo "### Checking if JSON syntax is valid ###"
+for file in `git diff --name-only --cached | grep -E '\.(json)'`
+do
+    if [[ -f $file ]]
+    then
+        checkjson $file
+        if [[ $? -ne 0 ]]
+        then
+            echo "ERROR: JSON syntax validation failed at: $file"
+            syntax_is_bad=1
+        else
+            echo "OK: $file looks like a valid JSON file"
         fi
     fi
 done
